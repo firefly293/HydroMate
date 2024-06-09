@@ -6,6 +6,7 @@ import {useFonts} from 'expo-font'
 import { registerRootComponent } from 'expo';
 
 import HomeScreen from './app/screens/HomeScreen';
+import CircularProgress from 'react-native-circular-progress-indicator';
 
 export default function App() {
   console.log("App executed!")
@@ -25,6 +26,6 @@ export default function App() {
   }
 
   return (
-    <HomeScreen/>
+    <HomeScreen></HomeScreen>
   );
 }
