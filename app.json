@@ -18,7 +18,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./app/assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.advaitbadrish.hydromate"
     },
     "web": {
       "favicon": "./app/assets/images/favicon.png"
@@ -27,9 +28,16 @@
       [
         "expo-font",
         {
-          "fonts": ["./app/assets/fonts/Coolvetica.ttf"]
+          "fonts": [
+            "./app/assets/fonts/Coolvetica.ttf"
+          ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "74442089-f2ba-40ee-9bc7-a2877edb3e86"
+      }
+    }
   }
 }
