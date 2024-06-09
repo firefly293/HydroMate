@@ -1,15 +1,18 @@
 import React, { createRef, useRef, useState } from 'react';
-import { StyleSheet, SafeAreaView, Text, View, StatusBar, Button, Image, Animated, Easing } from 'react-native';
+import { StyleSheet, SafeAreaView, Text, View, StatusBar, Button, Image, Animated, Easing, ScrollView } from 'react-native';
 import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler'
 import { useEffect } from 'react';
 
 import { CircularProgress, CircularProgressBase } from 'react-native-circular-progress-indicator';
+import { BarChart } from 'react-native-gifted-charts'
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment'
 
 import colors from "../config/colors"
-import { GetFormattedDate } from '../utils/GetFormattedDate';
+import { GetFormattedDate, AddDays, SubtractDays, GetDayOfWeek } from '../utils/GetFormattedDate';
 import { storeData, getData } from '../utils/AsyncStorageManager';
+import { weekdaysShort } from 'moment/moment';
 
 const AnimatedLottieView = Animated.createAnimatedComponent(LottieView)
 
@@ -17,6 +20,7 @@ function HomeScreen(props) {
     const [water, setWater] = useState(0)
     const [goal, setGoal] = useState(64)
     const [currentAdd, setCurrentAdd] = useState(8)
+    const [barData, setBarData] = useState([])
 
     const confettiRef = useRef(null)
 
@@ -56,62 +60,114 @@ function HomeScreen(props) {
         }
     }
 
+
+    const fetchData = async () => {
+        try {
+            const allKeys = await AsyncStorage.getAllKeys();
+            const allData = await AsyncStorage.multiGet(allKeys);
+
+            console.log(GetFormattedDate())
+            const today = moment(GetFormattedDate());
+            const startOfWeek = today.clone().startOf('isoWeek'); // Start of the week (Monday)
+
+            const weekData = allData
+                .filter(([key]) => {
+                    const date = moment(key, 'MM-DD-YYYY');
+                    return date.isBetween(startOfWeek, today, null, '[]');
+                })
+                .map(([key, value]) => ({
+                    date: moment(key, 'MM-DD-YYYY'),
+                    value: Number(value),
+                }))
+                .sort((a, b) => a.date.diff(b.date));
+
+            const chartData = [];
+            for (let i = 0; i < 7; i++) {
+                const currentDate = startOfWeek.clone().add(i, 'days');
+                const dataForDay = weekData.find(d => d.date.isSame(currentDate, 'day'));
+                chartData.push({
+                    label: currentDate.format('dd').charAt(0), // 'Mo', 'Tu', 'We', etc. -> take first character
+                    value: dataForDay ? dataForDay.value : 0,
+                });
+            }
+
+            setBarData(chartData);
+            console.log(barData)
+        } catch (error) {
+            console.error(error);
+        }
+    };
     useEffect(() => {
         // Set the values to the values in the data
         getData(GetFormattedDate())
             .then(dataCallback)
+        fetchData()
     }, [])
 
 
-
     return (
-        <GestureHandlerRootView>
-            <SafeAreaView style={styles.container}>
-                <View style={styles.topBar} >
-                    <Text style={styles.topBarText}>Hydro<Text style={{ color: colors.secondary, fontStyle: "italic" }}>Mate</Text></Text>
-                </View>
-                <View style={styles.mainContent}>
-                    <View style={styles.progressSection} elevation={5}>
-                        <Text style={styles.headingText}>Progress</Text>
-                        <CircularProgressBase
-                            value={clamp(water / goal * 100, 0, 100)}
-                            radius={120}
-                            activeStrokeColor={colors.primary}
-                            inActiveStrokeColor={colors.primary}
-                            activeStrokeWidth={30}
-                            inActiveStrokeWidth={30}
-                            inActiveStrokeOpacity={0.2}
-                        >
-                            <Text style={styles.ProgressNumberText}>{water} oz / <Text style={{ opacity: 0.5 }}>{goal} oz</Text></Text>
-                        </CircularProgressBase>
-                        <View style={styles.amountToAddAdjustView}>
-                            <TouchableOpacity style={styles.addSubtractTouchable} onPress={() => setCurrentAdd(clamp(currentAdd - 0.5, 0.5, 100))} onLongPress={() => setCurrentAdd(clamp(currentAdd - 10, 0.5, 100))}>
-                                <Image style={styles.addSubtractIcon} source={require("../assets/images/minus.png")}></Image>
-                            </TouchableOpacity>
-                            <Text style={styles.currentAddText}>{currentAdd} oz</Text>
-                            <TouchableOpacity style={styles.addSubtractTouchable} onPress={() => setCurrentAdd(clamp(currentAdd + 0.5, 0.5, 100))} onLongPress={() => setCurrentAdd(clamp(currentAdd + 10, 0.5, 100))}>
-                                <Image style={styles.addSubtractIcon} source={require("../assets/images/plus.png")}></Image>
-                            </TouchableOpacity>
-                        </View>
-
-                        <Button title="LOG" onPress={() => mySetWater(clamp(water + currentAdd, 0, 1000))} style={styles.logButton}></Button>
-
+        <ScrollView>
+            <GestureHandlerRootView>
+                <SafeAreaView style={styles.container}>
+                    <View style={styles.topBar} >
+                        <Text style={styles.topBarText}>Hydro<Text style={{ color: colors.secondary, fontStyle: "italic" }}>Mate</Text></Text>
                     </View>
-                </View>
+                    <View style={styles.mainContent}>
+                        <View style={styles.progressSection} elevation={5}>
+                            <Text style={styles.headingText}>Progress</Text>
+                            <CircularProgressBase
+                                value={clamp(water / goal * 100, 0, 100)}
+                                radius={120}
+                                activeStrokeColor={colors.primary}
+                                inActiveStrokeColor={colors.primary}
+                                activeStrokeWidth={30}
+                                inActiveStrokeWidth={30}
+                                inActiveStrokeOpacity={0.2}
+                            >
+                                <Text style={styles.ProgressNumberText}>{water} oz / <Text style={{ opacity: 0.5 }}>{goal} oz</Text></Text>
+                            </CircularProgressBase>
+                            <View style={styles.amountToAddAdjustView}>
+                                <TouchableOpacity style={styles.addSubtractTouchable} onPress={() => setCurrentAdd(clamp(currentAdd - 0.5, 0.5, 100))} onLongPress={() => setCurrentAdd(clamp(currentAdd - 10, 0.5, 100))}>
+                                    <Image style={styles.addSubtractIcon} source={require("../assets/images/minus.png")}></Image>
+                                </TouchableOpacity>
+                                <Text style={styles.currentAddText}>{currentAdd} oz</Text>
+                                <TouchableOpacity style={styles.addSubtractTouchable} onPress={() => setCurrentAdd(clamp(currentAdd + 0.5, 0.5, 100))} onLongPress={() => setCurrentAdd(clamp(currentAdd + 10, 0.5, 100))}>
+                                    <Image style={styles.addSubtractIcon} source={require("../assets/images/plus.png")}></Image>
+                                </TouchableOpacity>
+                            </View>
 
-            </SafeAreaView>
-            {/* <LottieView */}
-            {/*     ref={confettiRef} */}
-            {/*     source={require("../assets/animations/confettiv2.json")} */}
-            {/*     autoPlay={false} */}
-            {/*     loop={false} */}
-            {/*     style={styles.lottie} */}
-            {/*     resizeMode='cover' */}
-            {/*     pointerEvents="none" */}
-            {/*     elevation={6} */}
-            {/*     enabled={false} */}
-            {/* /> */}
-        </GestureHandlerRootView>
+                            <Button title="LOG" onPress={() => mySetWater(clamp(water + currentAdd, 0, 1000))} style={styles.logButton}></Button>
+
+                        </View>
+                        <View style={styles.progressSection} elevation={5}>
+                            <Text style={styles.headingText}>Insights</Text>
+                            <BarChart
+                                data={barData}
+                                barWidth={20}
+                                barBorderRadius={5}
+                                width={250}
+                                yAxisThickness={0}
+                                xAxisThickness={0}
+                                initialSpacing={10}
+                                noOfSections={4}
+                            />
+                        </View>
+                    </View>
+
+                </SafeAreaView>
+                {/* <LottieView */}
+                {/*     ref={confettiRef} */}
+                {/*     source={require("../assets/animations/confettiv2.json")} */}
+                {/*     autoPlay={false} */}
+                {/*     loop={false} */}
+                {/*     style={styles.lottie} */}
+                {/*     resizeMode='cover' */}
+                {/*     pointerEvents="none" */}
+                {/*     elevation={6} */}
+                {/*     enabled={false} */}
+                {/* /> */}
+            </GestureHandlerRootView>
+        </ScrollView>
     );
 }
 
@@ -172,6 +228,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
         justifyContent: 'flex-start',
+        alignContent: 'center',
         padding: 20
     },
     ProgressNumberText: {
@@ -186,7 +243,8 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
         alignItems: "center",
         flexDirection: "column",
-        borderRadius: 10
+        borderRadius: 10,
+        marginBottom: 10,
     },
     topBar: {
         width: '100%',

@@ -14,10 +14,10 @@ export function GetFormattedDate() {
 }
 
 
-export function AddOneDay(dateString) {
+export function AddDays(dateString, nDays) {
     const [month, day, year] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day);
-    date.setDate(date.getDate() + 1);
+    date.setDate(date.getDate() + nDays);
     const newMonth = String(date.getMonth() + 1).padStart(2, '0');
     const newDay = String(date.getDate()).padStart(2, '0');
     const newYear = date.getFullYear();
@@ -25,12 +25,21 @@ export function AddOneDay(dateString) {
 }
 
 
-export function SubtractOneDay(dateString) {
+export function SubtractDays(dateString, nDays) {
     const [month, day, year] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day);
-    date.setDate(date.getDate() + 1);
+    date.setDate(date.getDate() + nDays);
     const newMonth = String(date.getMonth() + 1).padStart(2, '0');
     const newDay = String(date.getDate()).padStart(2, '0');
     const newYear = date.getFullYear();
     return `${newMonth}-${newDay}-${newYear}`
+}
+
+
+export function GetDayOfWeek(dateString) {
+    const [month, day, year] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const dayOfWeek = date.getDay();
+    const dayMap = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    return dayMap[dayOfWeek];
 }
