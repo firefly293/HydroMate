@@ -3,40 +3,73 @@ import { StyleSheet, SafeAreaView, Text, View, StatusBar, Button, Image, Touchab
 
 import { CircularProgress, CircularProgressBase } from 'react-native-circular-progress-indicator';
 import LottieView from 'lottie-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import colors from "../config/colors"
 import { storeValue, getValue } from '../utils/AsyncStorageManager';
+import { useEffect } from 'react';
 
-const goal = 64
+
 
 function HomeScreen(props) {
     const [water, setWater] = useState(0)
-    const [currentAdd, setCurrentAdd] = useState(8) 
+    const [goal, setGoal] = useState(64)
+    const [currentAdd, setCurrentAdd] = useState(8)
 
-    var clamp = function(n, min, max){
+    var clamp = function(n, min, max) {
         if (n < min) return min
-        if (n > max)  return max
+        if (n > max) return max
         else return n
     }
+
+    var mySetWater = function(val) {
+        setWater(val)
+        AsyncStorage.setItem("data", JSON.stringify({ water: water, goal: goal }), () => { console.log("stored water value " + val.toString()) })
+    }
+
+    var mySetGoal = function(val) {
+        setGoal(val)
+        AsyncStorage.setItem("data", JSON.stringify({ water: water, goal: goal }))
+    }
+
+    useEffect(() => {
+        // Set the values to the values in the data
+        var dataCallback = function(dataString) {
+            console.log("in data callback")
+            if (dataString) {
+                var data = JSON.parse(dataString)
+                setWater(clamp(data.water, 0, 1000))
+                setGoal(clamp(data.goal, 0, 1000))
+                console.log("loaded data from disk")
+            }
+            else {
+                console.log("no data found")
+            }
+        }
+
+        AsyncStorage.getItem("data", dataCallback)
+    }, [])
+
+
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.topBar} >
-                <Text style={styles.topBarText}>Hydro<Text style={{color: colors.secondary, fontStyle: "italic"}}>Mate</Text></Text>
+                <Text style={styles.topBarText}>Hydro<Text style={{ color: colors.secondary, fontStyle: "italic" }}>Mate</Text></Text>
             </View>
             <View style={styles.mainContent}>
                 <View style={styles.progressSection} elevation={5}>
                     <Text style={styles.headingText}>Progress</Text>
-                    <CircularProgressBase 
-                        value={clamp(water / goal * 100, 0, 100)} 
+                    <CircularProgressBase
+                        value={clamp(water / goal * 100, 0, 100)}
                         radius={120}
-                        activeStrokeColor={colors.primary} 
+                        activeStrokeColor={colors.primary}
                         inActiveStrokeColor={colors.primary}
                         activeStrokeWidth={30}
                         inActiveStrokeWidth={30}
                         inActiveStrokeOpacity={0.2}
                     >
-                        <Text style={styles.ProgressNumberText}>{water} oz / {goal} oz</Text>                                                
+                        <Text style={styles.ProgressNumberText}>{water} oz / {goal} oz</Text>
                     </CircularProgressBase>
                     <View style={styles.amountToAddAdjustView}>
                         <TouchableOpacity onPress={() => setCurrentAdd(clamp(currentAdd - 0.5, 0.5, 100))} onLongPress={() => setCurrentAdd(clamp(currentAdd - 10, 0.5, 100))}>
@@ -47,15 +80,18 @@ function HomeScreen(props) {
                             <Image style={styles.addSubtractIcon} source={require("../assets/images/plus.png")}></Image>
                         </TouchableOpacity>
                     </View>
-                    <Button title="LOG" onPress={() => setWater(clamp(water + currentAdd, 0, 1000))} style={styles.logButton}></Button>
-                    
+
+                    <TouchableOpacity   >
+                        <Button title="LOG" onPress={() => mySetWater(clamp(water + currentAdd, 0, 1000))} style={styles.logButton}></Button>
+                    </TouchableOpacity>
+
                 </View>
             </View>
 
         </SafeAreaView>
     );
-    }
-    
+}
+
 const styles = StyleSheet.create({
     addSubtractIcon: {
         width: 30,
@@ -63,13 +99,13 @@ const styles = StyleSheet.create({
         opacity: 0.5
     },
     amountToAddAdjustView: {
-    width: '100%',
-    height: "auto",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: '#0000',
-    padding: 10
+        width: '100%',
+        height: "auto",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: '#0000',
+        padding: 10
     },
     currentAddText: {
         fontFamily: "Coolvetica",
