@@ -1,6 +1,6 @@
 import React, { createRef, useRef, useState } from 'react';
-import { StyleSheet, SafeAreaView, Text, View, StatusBar, Button, Image } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler'
+import { StyleSheet, SafeAreaView, Text, View, StatusBar, Button, Image, Animated, Easing } from 'react-native';
+import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler'
 import { useEffect } from 'react';
 
 import { CircularProgress, CircularProgressBase } from 'react-native-circular-progress-indicator';
@@ -11,7 +11,7 @@ import colors from "../config/colors"
 import { GetFormattedDate } from '../utils/GetFormattedDate';
 import { storeData, getData } from '../utils/AsyncStorageManager';
 
-
+const AnimatedLottieView = Animated.createAnimatedComponent(LottieView)
 
 function HomeScreen(props) {
     const [water, setWater] = useState(0)
@@ -65,7 +65,7 @@ function HomeScreen(props) {
 
 
     return (
-        <>
+        <GestureHandlerRootView>
             <SafeAreaView style={styles.container}>
                 <View style={styles.topBar} >
                     <Text style={styles.topBarText}>Hydro<Text style={{ color: colors.secondary, fontStyle: "italic" }}>Mate</Text></Text>
@@ -100,17 +100,18 @@ function HomeScreen(props) {
                 </View>
 
             </SafeAreaView>
-            <LottieView
-                ref={confettiRef}
-                source={require("../assets/animations/confettiv2.json")}
-                autoPlay={true}
-                loop={false}
-                style={styles.lottie}
-                resizeMode='cover'
-                pointerEvents="none"
-                elevation={6}
-            />
-        </>
+            {/* <LottieView */}
+            {/*     ref={confettiRef} */}
+            {/*     source={require("../assets/animations/confettiv2.json")} */}
+            {/*     autoPlay={false} */}
+            {/*     loop={false} */}
+            {/*     style={styles.lottie} */}
+            {/*     resizeMode='cover' */}
+            {/*     pointerEvents="none" */}
+            {/*     elevation={6} */}
+            {/*     enabled={false} */}
+            {/* /> */}
+        </GestureHandlerRootView>
     );
 }
 

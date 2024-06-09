@@ -12,3 +12,25 @@ export function GetFormattedDate() {
     return mm + '-' + dd + '-' + yyyy;
 
 }
+
+
+export function AddOneDay(dateString) {
+    const [month, day, year] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + 1);
+    const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const newDay = String(date.getDate()).padStart(2, '0');
+    const newYear = date.getFullYear();
+    return `${newMonth}-${newDay}-${newYear}`
+}
+
+
+export function SubtractOneDay(dateString) {
+    const [month, day, year] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + 1);
+    const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const newDay = String(date.getDate()).padStart(2, '0');
+    const newYear = date.getFullYear();
+    return `${newMonth}-${newDay}-${newYear}`
+}
